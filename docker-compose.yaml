@@ -1,0 +1,20 @@
+version: '3.7'
+
+services:
+    dbt:
+        image: "ghcr.io/dbt-labs/dbt-postgres:1.3.1"
+        volumes:
+            - "./:/usr/app/dbt"
+            - "./profiles.yml:/root/.dbt/profiles.yml"
+        # command: "debug"
+        # command: "run --var='{\"integration_id\": \"dc24aa96-7a1f-4abb-b1cc-992848ad5971\", \"workspace_id\": \"1203531897608619\"}'"
+        command: "run --vars='{\"table_prefix\":\"_768043c5\",\"timestamp\":\"1674902623.235171\",\"integration_id\":\"768043c5-a236-472e-ac0c-e0c62753de01\"}'"
+        networks:
+            default:
+            db-bridge:
+                aliases: 
+                    - db
+networks:
+    db-bridge:
+        name: db-bridge
+        driver: bridge
