@@ -10,7 +10,7 @@ SELECT
     md5(
       '{{ var("integration_id") }}' ||
       "{{ var("table_prefix") }}_orders".id ||
-      'customer' ||
+      'order' ||
       'prestashop'
     )  as id,
     'prestashop' as source,
