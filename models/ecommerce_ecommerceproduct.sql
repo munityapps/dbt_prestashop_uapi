@@ -28,13 +28,13 @@ SELECT
     "{{ var("table_prefix") }}_products".quantity::float as quantity_available ,
     "{{ var("table_prefix") }}_products".minimal_quantity::float as minimal_quantity ,
     NULL::float as stock_status ,
-    NULL::jsonb as images,
+    image_table.images as images,
     '{}'::jsonb  as tags,
     NULL::boolean as purchasable ,
     NULL::float as regular_price ,
     "{{ var("table_prefix") }}_products".wholesale_price as sale_price ,
     "{{ var("table_prefix") }}_products".price::float as price ,
-    NULL::float  as total_sales ,
+    NULL::float as total_sales ,
     "{{ var("table_prefix") }}_products".on_sale::boolean as on_sale ,
     NULL as rate ,
     NULL as sku ,
@@ -51,3 +51,9 @@ SELECT
 FROM "{{ var("table_prefix") }}_products"
 LEFT JOIN _airbyte_raw_{{ var("table_prefix") }}_products
 ON _airbyte_raw_{{ var("table_prefix") }}_products._airbyte_ab_id = "{{ var("table_prefix") }}_products"._airbyte_ab_id
+LEFT JOIN 
+( SELECT 
+    "_airbyte_ab_id", json_agg(json_build_object('url', '{{ var("prestashop_url") }}' || id || '-large_default/image.jpg')) AS images
+from {{ var("table_prefix") }}_products_associations_images
+	group by "_airbyte_ab_id" ) as image_table
+on image_table._airbyte_ab_id = _airbyte_raw_{{ var("table_prefix") }}_products._airbyte_ab_id 
