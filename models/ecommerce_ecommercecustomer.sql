@@ -21,10 +21,7 @@ SELECT
     "{{ var("table_prefix") }}_customers".firstname as firstname,
     "{{ var("table_prefix") }}_customers".lastname as lastname,
     NULL as username,
-    CASE
-   		WHEN "{{ var("table_prefix") }}_customers".birthday = '0000-00-00' THEN NULL::date
-   		ELSE ("{{ var("table_prefix") }}_customers".birthday)::date
-	  END AS birthday,
+    NULL AS birthday,
     "{{ var("table_prefix") }}_customers".email as email,
     NULL as address,
     NULL::boolean as email_marketing_consent,
