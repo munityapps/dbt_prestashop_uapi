@@ -3,7 +3,16 @@
     unique_key='id',
     incremental_strategy='delete+insert',
 )}}
-
+WITH order_lines AS (
+  SELECT
+    "{{ var("table_prefix") }}_orders"._airbyte_ab_id AS order_id,
+    jsonb_build_object(
+            'product_id', jsonb_array_elements(associations -> 'order_rows') ->> 'product_id',
+            'quantity', jsonb_array_elements(associations -> 'order_rows') ->> 'product_quantity',
+            'name', jsonb_array_elements(associations -> 'order_rows') ->> 'product_name'
+        ) AS product_info
+  FROM "{{ var("table_prefix") }}_orders"
+)
 SELECT 
     NOW() as created,
     NOW() as modified,
@@ -38,7 +47,10 @@ SELECT
     NULL as transaction_id,
     NULL::date as date_paid,
     NULL::date as date_completed,
-    "{{ var("table_prefix") }}_orders".associations::jsonb as lines,
+    (SELECT 
+    jsonb_agg(order_lines.product_info) 
+    from order_lines 
+    where order_lines.order_id = "{{ var("table_prefix") }}_orders"._airbyte_ab_id) AS lines,
     NULL::jsonb as tax_lines,
     NULL::jsonb as shipping_lines,
     NULL::jsonb as fee_lines,
@@ -62,3 +74,4 @@ SELECT
 FROM "{{ var("table_prefix") }}_orders"
 LEFT JOIN _airbyte_raw_{{ var("table_prefix") }}_orders
 ON _airbyte_raw_{{ var("table_prefix") }}_orders._airbyte_ab_id = "{{ var("table_prefix") }}_orders"._airbyte_ab_id
+LEFT JOIN order_lines ON order_lines.order_id = "{{ var("table_prefix") }}_orders"."_airbyte_ab_id"

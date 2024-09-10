@@ -21,7 +21,7 @@ SELECT
     "{{ var("table_prefix") }}_customers".firstname as firstname,
     "{{ var("table_prefix") }}_customers".lastname as lastname,
     NULL as username,
-    NULL AS birthday,
+    NULL::date AS birthday,
     "{{ var("table_prefix") }}_customers".email as email,
     NULL as address,
     NULL::boolean as email_marketing_consent,
