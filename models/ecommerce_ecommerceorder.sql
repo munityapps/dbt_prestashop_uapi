@@ -7,9 +7,15 @@ WITH order_lines AS (
   SELECT
     "{{ var("table_prefix") }}_orders"._airbyte_ab_id AS order_id,
     jsonb_build_object(
-            'product_id', jsonb_array_elements(associations -> 'order_rows') ->> 'product_id',
-            'quantity', jsonb_array_elements(associations -> 'order_rows') ->> 'product_quantity',
-            'name', jsonb_array_elements(associations -> 'order_rows') ->> 'product_name'
+            'external_id', jsonb_array_elements(associations->'order_rows')->>'product_id',
+            'quantity', jsonb_array_elements(associations->'order_rows')->>'product_quantity',
+            'name', jsonb_array_elements(associations->'order_rows')->>'product_name',
+            'product_id', md5(
+              '{{ var("integration_id") }}'::text ||
+              (jsonb_array_elements(associations->'order_rows')->>'product_id')::text ||
+              'product' ||
+              'prestashop'
+            ) 
         ) AS product_info
   FROM "{{ var("table_prefix") }}_orders"
 )
