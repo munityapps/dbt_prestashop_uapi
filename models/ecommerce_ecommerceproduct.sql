@@ -25,7 +25,7 @@ SELECT
     "{{ var("table_prefix") }}_products".type as type ,
     NULL as url ,
     '{}'::jsonb as variations ,
-    "{{ var("table_prefix") }}_products".quantity::float as quantity_available ,
+    stock.quantity::float as quantity_available ,
     "{{ var("table_prefix") }}_products".minimal_quantity::float as minimal_quantity ,
     NULL::float as stock_status ,
     image_table.images as images,
@@ -57,3 +57,8 @@ LEFT JOIN
 from {{ var("table_prefix") }}_products_associations_images
 	group by "_airbyte_ab_id" ) as image_table
 on image_table._airbyte_ab_id = _airbyte_raw_{{ var("table_prefix") }}_products._airbyte_ab_id 
+LEFT JOIN {{ var("table_prefix") }}_products_a__ions_stock_availables as pasa
+ON pasa._airbyte_ab_id = "{{ var("table_prefix") }}_products"._airbyte_ab_id
+LEFT JOIN {{ var("table_prefix") }}_stock_availables as stock
+ON stock.id::text = pasa.id::text
+WHERE pasa.id_product_attribute = '0'
