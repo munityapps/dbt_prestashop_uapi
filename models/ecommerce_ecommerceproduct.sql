@@ -6,21 +6,29 @@
 WITH variations_data AS (
     SELECT 
         "{{ var("table_prefix") }}_products".id as product_id,
-        json_object_agg(
-            CASE
-                WHEN "{{ var("table_prefix") }}_combinations".default_on::int = 1 THEN 'default'
-                ELSE "{{ var("table_prefix") }}_combinations".id::text
-            END,
+        json_agg(
             json_build_object(
                 'id', "{{ var("table_prefix") }}_combinations".id,
+                'stock_id',"{{ var("table_prefix") }}_stock_availables".id,
                 'quantity', "{{ var("table_prefix") }}_combinations".quantity,
-                'id_product', "{{ var("table_prefix") }}_combinations".id_product,
-                'price', ("{{ var("table_prefix") }}_combinations".price::float + "{{ var("table_prefix") }}_products".price::float)
+                'price', "{{ var("table_prefix") }}_combinations".price::float,
+                'ean13', "{{ var("table_prefix") }}_combinations".ean13,
+                'mpn', "{{ var("table_prefix") }}_combinations".mpn,
+                'supplier_reference', "{{ var("table_prefix") }}_combinations".supplier_reference,
+                'reference', "{{ var("table_prefix") }}_combinations".reference,
+                'minimal_quantity', "{{ var("table_prefix") }}_combinations".minimal_quantity::float,
+                'options', "{{ var("table_prefix") }}_combinations".associations::jsonb->'product_option_values',
+                'default', CASE
+                    WHEN "{{ var("table_prefix") }}_combinations".default_on::int = 1 THEN true
+                    ELSE false
+                END
             )
         ) AS variations
     FROM "{{ var("table_prefix") }}_combinations"
     LEFT JOIN "{{ var("table_prefix") }}_products"
         ON "{{ var("table_prefix") }}_combinations".id_product::int = "{{ var("table_prefix") }}_products".id::int
+    LEFT JOIN "{{ var("table_prefix") }}_stock_availables"
+        ON "{{ var("table_prefix") }}_stock_availables".id_product_attribute::int = "{{ var("table_prefix") }}_combinations".id::int
     GROUP BY "{{ var("table_prefix") }}_products".id
 )
 SELECT 
