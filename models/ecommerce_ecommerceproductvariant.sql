@@ -7,7 +7,8 @@
 SELECT 
 md5('{{ var("integration_id") }}' || comb.id || 'variation' || 'prestashop') as id,
 comb.id as external_id,
-comb.quantity::int as quantity_available,
+stock.quantity::int as quantity_available,
+stock.id::int as id_stock,
 comb.minimal_quantity::int as minimal_quantity,
 comb.reference as reference,
 comb.ean13 as ean13,
@@ -19,3 +20,6 @@ md5('{{ var("integration_id") }}' || prod.id ||'product' ||'prestashop')  as pro
 FROM {{ var("table_prefix") }}_combinations comb
 LEFT JOIN {{ var("table_prefix") }}_products prod
 ON comb.id_product::int = prod.id::int
+LEFT JOIN {{ var("table_prefix") }}_stock_availables stock
+ON comb.id::int = stock.id_product_attribute::int
+where stock.quantity notnull 

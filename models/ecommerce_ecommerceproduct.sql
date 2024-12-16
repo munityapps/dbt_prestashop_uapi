@@ -3,34 +3,6 @@
     unique_key='id',
     incremental_strategy='delete+insert',
 )}}
-WITH variations_data AS (
-    SELECT 
-        "{{ var("table_prefix") }}_products".id as product_id,
-        json_agg(
-            json_build_object(
-                'id', "{{ var("table_prefix") }}_combinations".id,
-                'stock_id',"{{ var("table_prefix") }}_stock_availables".id,
-                'quantity', "{{ var("table_prefix") }}_combinations".quantity,
-                'price', "{{ var("table_prefix") }}_combinations".price::float,
-                'ean13', "{{ var("table_prefix") }}_combinations".ean13,
-                'mpn', "{{ var("table_prefix") }}_combinations".mpn,
-                'supplier_reference', "{{ var("table_prefix") }}_combinations".supplier_reference,
-                'reference', "{{ var("table_prefix") }}_combinations".reference,
-                'minimal_quantity', "{{ var("table_prefix") }}_combinations".minimal_quantity::float,
-                'options', "{{ var("table_prefix") }}_combinations".associations::jsonb->'product_option_values',
-                'default', CASE
-                    WHEN "{{ var("table_prefix") }}_combinations".default_on::int = 1 THEN true
-                    ELSE false
-                END
-            )
-        ) AS variations
-    FROM "{{ var("table_prefix") }}_combinations"
-    LEFT JOIN "{{ var("table_prefix") }}_products"
-        ON "{{ var("table_prefix") }}_combinations".id_product::int = "{{ var("table_prefix") }}_products".id::int
-    LEFT JOIN "{{ var("table_prefix") }}_stock_availables"
-        ON "{{ var("table_prefix") }}_stock_availables".id_product_attribute::int = "{{ var("table_prefix") }}_combinations".id::int
-    GROUP BY "{{ var("table_prefix") }}_products".id
-)
 SELECT 
     NOW() as created,
     NOW() as modified,
@@ -50,8 +22,7 @@ SELECT
     "{{ var("table_prefix") }}_products".description_short::jsonb->0->>'value' as short_description ,
     "{{ var("table_prefix") }}_products".reference as reference,
     "{{ var("table_prefix") }}_products".type as type ,
-    NULL as url ,
-    variations_data.variations as variations ,
+    NULL as url,
     stock.quantity::float as quantity_available ,
     "{{ var("table_prefix") }}_products".minimal_quantity::float as minimal_quantity ,
     NULL::float as stock_status ,
@@ -88,6 +59,4 @@ LEFT JOIN {{ var("table_prefix") }}_products_a__ions_stock_availables as pasa
 ON pasa._airbyte_ab_id = "{{ var("table_prefix") }}_products"._airbyte_ab_id
 LEFT JOIN {{ var("table_prefix") }}_stock_availables as stock
 ON stock.id::text = pasa.id::text
-LEFT JOIN variations_data
-    ON variations_data.product_id = "{{ var("table_prefix") }}_products".id
 WHERE pasa.id_product_attribute = '0'
