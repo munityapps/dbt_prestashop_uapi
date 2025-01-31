@@ -44,7 +44,9 @@ SELECT
     "{{ var("table_prefix") }}_products".height::float as height ,
     "{{ var("table_prefix") }}_products".width::float as width ,
     "{{ var("table_prefix") }}_products".location as location ,
-    "{{ var("table_prefix") }}_products".manufacturer_name as manufacturer_name ,
+    manu.name as manufacturer_id,
+    sup.name as supplier_id,
+    md5('{{ var("integration_id") }}' || taxrules.id_tax ) as tax_id,
     "{{ var("table_prefix") }}_products".unity as unity 
 FROM "{{ var("table_prefix") }}_products"
 LEFT JOIN _airbyte_raw_{{ var("table_prefix") }}_products
@@ -59,4 +61,12 @@ LEFT JOIN {{ var("table_prefix") }}_products_a__ions_stock_availables as pasa
 ON pasa._airbyte_ab_id = "{{ var("table_prefix") }}_products"._airbyte_ab_id
 LEFT JOIN {{ var("table_prefix") }}_stock_availables as stock
 ON stock.id::text = pasa.id::text
+LEFT JOIN {{ var("table_prefix") }}_manufacturers as manu
+ON "{{ var("table_prefix") }}_products".manufacturer_name = manu.name
+LEFT JOIN {{ var("table_prefix") }}_product_suppliers as prod_sup
+ON prod_sup.id_product = "{{ var("table_prefix") }}_products".id::text
+LEFT JOIN {{ var("table_prefix") }}_suppliers as sup
+ON prod_sup.id_supplier = sup.id::text
+LEFT JOIN {{ var("table_prefix") }}_tax_rules as taxrules
+ON "{{ var("table_prefix") }}_products".id_tax_rules_group = taxrules.id_tax_rules_group
 WHERE pasa.id_product_attribute = '0'
