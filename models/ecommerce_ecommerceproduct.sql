@@ -44,7 +44,13 @@ SELECT
     "{{ var("table_prefix") }}_products".height::float as height ,
     "{{ var("table_prefix") }}_products".width::float as width ,
     "{{ var("table_prefix") }}_products".location as location ,
-    manu.name as manufacturer_id,
+    md5('{{ var("integration_id") }}' || manu.id ) as manufacturer_id,
+    md5(
+      '{{ var("integration_id") }}' ||
+      "{{ var("table_prefix") }}_products".id_category_default ||
+      'category' ||
+      'prestashop'
+    )  as category_id,
     sup.name as supplier_id,
     md5('{{ var("integration_id") }}' || taxrules.id_tax ) as tax_id,
     "{{ var("table_prefix") }}_products".unity as unity 
